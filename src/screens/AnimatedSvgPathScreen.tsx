@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { Dispatch, useEffect } from "react";
 import { Dimensions, SafeAreaView, View } from "react-native";
 import { appViewStyle } from "../styles/AppStyle";
 import { spacing } from "../styles/Spacing";
@@ -38,9 +38,6 @@ const PATH_STRING = [
   "M290.4 111.096C290.698 112.632 290.997 113.549 291.296 113.848C291.637 114.147 292.064 114.296 292.576 114.296C293.13 114.296 293.557 114.147 293.856 113.848C294.197 113.549 294.496 112.632 294.752 111.096C295.05 109.56 295.2 107.64 295.2 105.336C295.2 102.989 295.136 101.197 295.008 99.96C294.922 98.68 294.794 97.6987 294.624 97.016C294.496 96.3333 294.304 95.8 294.048 95.416C293.664 94.8613 293.194 94.584 292.64 94.584C292.128 94.584 291.701 94.7547 291.36 95.096C291.018 95.3947 290.698 96.3333 290.4 97.912C290.101 99.448 289.952 101.645 289.952 104.504C289.952 107.363 290.101 109.56 290.4 111.096Z",
   "M355.332 101.752V121.464C355.332 121.933 354.116 122.317 351.684 122.616C349.252 122.872 346.735 123 344.132 123C341.572 123 339.908 122.893 339.14 122.68C338.415 122.424 338.052 122.019 338.052 121.464V101.112C338.052 99.192 337.967 97.9333 337.796 97.336C337.668 96.7387 337.54 96.2053 337.412 95.736C337.113 94.9253 336.58 94.52 335.812 94.52C334.617 94.52 334.02 95.096 334.02 96.248V121.464C334.02 121.933 332.804 122.317 330.372 122.616C327.983 122.872 325.487 123 322.884 123C320.324 123 318.66 122.893 317.892 122.68C317.124 122.424 316.74 122.019 316.74 121.464V89.912C316.74 89.016 317.956 88.12 320.388 87.224C322.863 86.328 325.465 85.88 328.196 85.88C330.927 85.88 332.463 86.6693 332.804 88.248L333.38 91.064H333.828C335.065 88.5893 337.199 86.8613 340.228 85.88C341.465 85.496 342.831 85.304 344.324 85.304C348.633 85.304 351.535 86.6053 353.028 89.208C354.564 91.768 355.332 95.9493 355.332 101.752Z",
 ];
-// const PATH_LENGTH = new svgPathProperties(
-//   PATH_STRING.join(" ")
-// ).getTotalLength();
 const ANIM_DURATION = 4000;
 
 const AnimatedSvgPathScreen = () => {
@@ -49,28 +46,45 @@ const AnimatedSvgPathScreen = () => {
   const aspectRatio = svgHeight / svgWidth;
   const horizontalMargin = spacing.m * 2;
 
-  // useEffect(() => {
-  //   executePathAnim();
-  // }, []);
+  const strokeOffsetValue = useSharedValue(0);
 
-  const AnimatedPathWrapper = () => {
+  const executePathAnim = () => {
+    strokeOffsetValue.value = 0;
+    strokeOffsetValue.value = withTiming(1, {
+      duration: ANIM_DURATION,
+      easing: Easing.linear,
+    });
+  };
+
+  useEffect(() => {
+    executePathAnim();
+  }, []);
+
+  const AnimatedPathWrapper = ({
+    sharedValue,
+    pathString,
+  }: {
+    sharedValue: Animated.SharedValue<number>;
+    pathString: string;
+  }) => {
+    const pathLength = new svgPathProperties(pathString).getTotalLength();
     const AnimatedPath = Animated.createAnimatedComponent(Path);
-
-    const strokeOffsetValue = useSharedValue(0);
 
     const animatedProps = useAnimatedProps(() => {
       return {
-        strokeDashoffset: PATH_LENGTH - PATH_LENGTH * strokeOffsetValue.value,
+        strokeDashoffset: pathLength - pathLength * sharedValue.value,
       };
     });
 
-    const executePathAnim = () => {
-      strokeOffsetValue.value = 0;
-      strokeOffsetValue.value = withTiming(1, {
-        duration: ANIM_DURATION,
-        easing: Easing.linear,
-      });
-    };
+    return (
+      <AnimatedPath
+        d={pathString}
+        animatedProps={animatedProps}
+        stroke={"#1d1d1d"}
+        strokeWidth={2}
+        strokeDasharray={pathLength}
+      />
+    );
   };
 
   return (
@@ -100,21 +114,11 @@ const AnimatedSvgPathScreen = () => {
               aspectRatio,
           ].join(" ")}
         >
-          {/*<AnimatedPath*/}
-          {/*  d={PATH_STRING.join(" ")}*/}
-          {/*  animatedProps={animatedProps}*/}
-          {/*  stroke={"#1d1d1d"}*/}
-          {/*  strokeWidth={2}*/}
-          {/*  strokeDasharray={PATH_LENGTH}*/}
-          {/*/>*/}
           {PATH_STRING.map((value) => {
             return (
-              <AnimatedPath
-                d={value}
-                animatedProps={animatedProps}
-                stroke={"#1d1d1d"}
-                strokeWidth={2}
-                strokeDasharray={PATH_LENGTH}
+              <AnimatedPathWrapper
+                sharedValue={strokeOffsetValue}
+                pathString={value}
               />
             );
           })}
