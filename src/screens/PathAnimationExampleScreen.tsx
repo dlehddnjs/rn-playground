@@ -30,7 +30,7 @@ interface ChartData {
 const PathAnimationExampleScreen = () => {
   const Y_AXIS_WIDTH = 24;
   const CHART_HEIGHT = 300;
-  const DATA_LENGTH = 30;
+  const DATA_LENGTH = 10;
 
   const [data, setData] = useState<ChartData[]>([]);
   const [pathLength, setPathLength] = useState(0);
@@ -56,32 +56,42 @@ const PathAnimationExampleScreen = () => {
 
   useEffect(() => {
     const tmpArray: ChartData[] = [];
-    // for (let i = 0; i < DATA_LENGTH; i++) {
-    //   tmpArray.push({
-    //     index: i,
-    //     value: Math.round(Math.random() * 100),
-    //   });
-    // }
-    tmpArray.push({
-      index: 0,
-      value: 0,
-    });
-    tmpArray.push({
-      index: 1,
-      value: 50,
-    });
-    tmpArray.push({
-      index: 2,
-      value: 10,
-    });
-    tmpArray.push({
-      index: 3,
-      value: 50,
-    });
-    tmpArray.push({
-      index: 4,
-      value: 0,
-    });
+    for (let i = 0; i < DATA_LENGTH; i++) {
+      tmpArray.push({
+        index: i,
+        value: Math.round(Math.random() * 100),
+      });
+    }
+    // tmpArray.push({
+    //   index: 0,
+    //   value: 0,
+    // });
+    // tmpArray.push({
+    //   index: 1,
+    //   value: 50,
+    // });
+    // tmpArray.push({
+    //   index: 2,
+    //   value: 10,
+    // });
+    // tmpArray.push({
+    //   index: 3,
+    //   value: 50,
+    // });
+    // tmpArray.push({
+    //   index: 4,
+    //   value: 0,
+    // });
+    // tmpArray.push(
+    //   { index: 0, value: 16 },
+    //   { index: 1, value: 79 },
+    //   { index: 2, value: 14 },
+    //   { index: 3, value: 72 },
+    //   { index: 4, value: 70 },
+    //   { index: 5, value: 85 },
+    //   { index: 6, value: 97 }
+    // );
+    console.log("data", tmpArray);
     setData([...tmpArray]);
   }, []);
 
@@ -100,7 +110,7 @@ const PathAnimationExampleScreen = () => {
     setPathLength: Dispatch<number>;
     setSmoothPathLength: Dispatch<number>;
   }) => {
-    const CONTROL_RATIO = 0.2;
+    const CONTROL_RATIO = 0.15;
     const pathLengthRef = useRef(-1);
     const smoothPathLengthRef = useRef(-1);
     const pathStringArray: string[] = [];
@@ -116,81 +126,141 @@ const PathAnimationExampleScreen = () => {
 
     useEffect(() => {
       data!.map((value, index, array) => {
+        if (index === array.length - 1) {
+          return;
+        }
+
+        let startTheta,
+          endTheta,
+          startDistance,
+          endDistance,
+          startControlPointX,
+          startControlPointY,
+          endControlPointX,
+          endControlPointY;
+
         if (index === 0) {
           pathStringArray.push(`M ${x(index)} ${y(value)}`);
           smoothPathStringArray.push(`M ${x(index)} ${y(value)}`);
-          return;
+          startControlPointX = x(index);
+          startControlPointY = y(array[index]);
+        } else {
+          startTheta =
+            Math.atan2(
+              y(array[index - 1]) - y(array[index + 1]),
+              x(index - 1) - x(index + 1)
+            ) + Math.PI;
+          startDistance =
+            Math.sqrt(
+              Math.pow(y(array[index - 1]) - y(array[index + 1]), 2) +
+                Math.pow(x(index - 1) - x(index + 1), 2)
+            ) * CONTROL_RATIO;
+          startControlPointX = x(index) + Math.cos(startTheta) * startDistance;
+          startControlPointY =
+            y(array[index]) + Math.sin(startTheta) * startDistance;
         }
 
         if (index === array.length - 2) {
-          pathStringArray.push(`L ${x(index)} ${y(value)}`);
-          smoothPathStringArray.push(`L ${x(index)} ${y(value)}`);
-          return;
-        }
-
-        if (index === array.length - 1) {
-          pathStringArray.push(`L ${x(index)} ${y(value)}`);
-          smoothPathStringArray.push(`L ${x(index)} ${y(value)}`);
-          return;
+          endControlPointX = x(index + 1);
+          endControlPointY = y(array[index + 1]);
+        } else {
+          endTheta = Math.atan2(
+            y(array[index]) - y(array[index + 2]),
+            x(index) - x(index + 2)
+          );
+          endDistance =
+            Math.sqrt(
+              Math.pow(y(array[index]) - y(array[index + 2]), 2) +
+                Math.pow(x(index) - x(index + 2), 2)
+            ) * CONTROL_RATIO;
+          endControlPointX = x(index + 1) + Math.cos(endTheta) * endDistance;
+          endControlPointY =
+            y(array[index + 1]) + Math.sin(endTheta) * endDistance;
         }
 
         pathStringArray.push(`L ${x(index)} ${y(value)}`);
-        // smoothPathStringArray.push(`L ${x(index)} ${y(value)}`);
-        const startTheta =
-          Math.atan2(
-            y(array[index - 1]) - y(array[index + 1]),
-            x(index - 1) - x(index + 1)
-          ) + Math.PI;
-        const endTheta = Math.atan2(
-          y(array[index]) - y(array[index + 2]),
-          x(index) - x(index + 2)
-        );
-        const startDistance =
-          Math.sqrt(
-            Math.pow(y(array[index - 1]) - y(array[index + 1]), 2) +
-              Math.pow(x(index - 1) - x(index + 1), 2)
-          ) * CONTROL_RATIO;
-        const endDistance =
-          Math.sqrt(
-            Math.pow(y(array[index]) - y(array[index + 2]), 2) +
-              Math.pow(x(index) - x(index + 2), 2)
-          ) * CONTROL_RATIO;
-        const startControlPointX =
-          x(index - 1) + Math.round(Math.cos(startTheta)) * startDistance;
-        const startControlPointY =
-          y(array[index - 1]) +
-          Math.round(Math.sin(startTheta)) * startDistance;
-        const endControlPointX =
-          x(index) + Math.round(Math.cos(endTheta)) * endDistance;
-        const endControlPointY =
-          y(value) + Math.round(Math.sin(endTheta)) * endDistance;
-        console.log("x(index)", x(index - 1));
-        console.log("y(array[index - 1])", y(array[index - 1]));
-        console.log("startTheta", startTheta);
-        console.log("startDistance", startDistance);
-        console.log("Math.cos(startTheta)", Math.round(Math.cos(startTheta)));
-        console.log("Math.sin(startTheta)", Math.round(Math.sin(startTheta)));
-        console.log("startControlPointX", startControlPointX);
-        console.log("startControlPointY", startControlPointY);
-        // smoothPathStringArray.push(
-        //   `C ${Math.cos(startTheta)} ${Math.sin(startTheta)} ${Math.cos(
-        //     endTheta
-        //   )} ${Math.sin(endTheta)} ${x(index)} ${y(value)}`
-        // );
-
         smoothPathStringArray.push(
           `C ${startControlPointX} ${startControlPointY} ${endControlPointX} ${endControlPointY} ${x(
-            index
-          )} ${y(value)}`
+            index + 1
+          )} ${y(array[index + 1])}`
         );
         controlPointPathStringArray.push(
-          `M ${x(index - 1)} ${y(array[index - 1])} 
+          `M ${x(index)} ${y(array[index])} 
            L ${startControlPointX} ${startControlPointY}`
         );
         controlPointPathStringArray.push(
-          `M ${x(index)} ${y(array[index])}
+          `M ${x(index + 1)} ${y(array[index + 1])}
         L ${endControlPointX} ${endControlPointY}`
         );
+
+        pathStringArray.push(`L ${x(index)} ${y(value)}`);
+        // // smoothPathStringArray.push(`L ${x(index)} ${y(value)}`);
+        // startTheta =
+        //   Math.atan2(
+        //     y(array[index - 1]) - y(array[index + 1]),
+        //     x(index - 1) - x(index + 1)
+        //   ) + Math.PI;
+        // endTheta = Math.atan2(
+        //   y(array[index]) - y(array[index + 2]),
+        //   x(index) - x(index + 2)
+        // );
+        // startDistance =
+        //   Math.sqrt(
+        //     Math.pow(y(array[index - 1]) - y(array[index + 1]), 2) +
+        //       Math.pow(x(index - 1) - x(index + 1), 2)
+        //   ) * CONTROL_RATIO;
+        // endDistance =
+        //   Math.sqrt(
+        //     Math.pow(y(array[index]) - y(array[index + 2]), 2) +
+        //       Math.pow(x(index) - x(index + 2), 2)
+        //   ) * CONTROL_RATIO;
+        // startControlPointX =
+        //   x(index - 1) + Math.round(Math.cos(startTheta)) * startDistance;
+        // startControlPointY =
+        //   y(array[index - 1]) +
+        //   Math.round(Math.sin(startTheta)) * startDistance;
+        // endControlPointX =
+        //   x(index) + Math.round(Math.cos(endTheta)) * endDistance;
+        // endControlPointY =
+        //   y(value) + Math.round(Math.sin(endTheta)) * endDistance;
+        if (index === 3) {
+          console.log("x(index)", x(index - 1));
+          console.log("y(array[index - 1])", y(array[index - 1]));
+          console.log("x(index)", x(index + 1));
+          console.log("y(array[index - 1])", y(array[index + 1]));
+          console.log("startTheta", startTheta);
+          console.log("startDistance", startDistance);
+          console.log(
+            "Math.cos(startTheta)",
+            Math.round(Math.cos(Number(startTheta)))
+          );
+          console.log(
+            "Math.sin(startTheta)",
+            Math.round(Math.sin(Number(startTheta)))
+          );
+          console.log("startControlPointX", startControlPointX);
+          console.log("startControlPointY", startControlPointY);
+        }
+
+        // // smoothPathStringArray.push(
+        // //   `C ${Math.cos(startTheta)} ${Math.sin(startTheta)} ${Math.cos(
+        // //     endTheta
+        // //   )} ${Math.sin(endTheta)} ${x(index)} ${y(value)}`
+        // // );
+        //
+        // smoothPathStringArray.push(
+        //   `C ${startControlPointX} ${startControlPointY} ${endControlPointX} ${endControlPointY} ${x(
+        //     index
+        //   )} ${y(value)}`
+        // );
+        // controlPointPathStringArray.push(
+        //   `M ${x(index - 1)} ${y(array[index - 1])}
+        //    L ${startControlPointX} ${startControlPointY}`
+        // );
+        // controlPointPathStringArray.push(
+        //   `M ${x(index)} ${y(array[index])}
+        // L ${endControlPointX} ${endControlPointY}`
+        // );
       });
       setPathString(pathStringArray.join(" "));
       setSmoothPathString(smoothPathStringArray.join(" "));
@@ -234,13 +304,13 @@ const PathAnimationExampleScreen = () => {
 
     return (
       <Svg fill={"transparent"}>
-        <AnimatedPath
-          d={pathString}
-          animatedProps={animatedProps}
-          stroke={"#f88"}
-          strokeWidth={2}
-          strokeDasharray={pathLength}
-        />
+        {/*<AnimatedPath*/}
+        {/*  d={pathString}*/}
+        {/*  animatedProps={animatedProps}*/}
+        {/*  stroke={"#f88"}*/}
+        {/*  strokeWidth={2}*/}
+        {/*  strokeDasharray={pathLength}*/}
+        {/*/>*/}
         <AnimatedPath
           d={smoothPathString}
           animatedProps={animatedProps}
@@ -248,8 +318,8 @@ const PathAnimationExampleScreen = () => {
           strokeWidth={2}
           strokeDasharray={smoothPathLength}
         />
-        <Path d={controlStartPointPathString} stroke={"#add"} strokeWidth={4} />
-        <Path d={controlEndPointPathString} stroke={"#dad"} strokeWidth={4} />
+        {/*<Path d={controlStartPointPathString} stroke={"#add"} strokeWidth={4} />*/}
+        {/*<Path d={controlEndPointPathString} stroke={"#dad"} strokeWidth={4} />*/}
       </Svg>
     );
   };
