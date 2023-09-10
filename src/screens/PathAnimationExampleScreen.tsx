@@ -1,7 +1,7 @@
 import React, { Dispatch, useEffect, useRef, useState } from "react";
 import { SafeAreaView, View } from "react-native";
 import { spacing } from "../styles/Spacing";
-import Svg, { G, Line, Path } from "react-native-svg";
+import Svg, { Circle, G, Line, Path } from "react-native-svg";
 import Animated, {
   useAnimatedProps,
   useSharedValue,
@@ -27,14 +27,49 @@ interface ChartData {
   value: number;
 }
 
+const TEST_DATA = [
+  { index: 0, value: 81 },
+  { index: 1, value: 41 },
+  { index: 2, value: 69 },
+  { index: 3, value: 90 },
+  { index: 4, value: 81 },
+  { index: 5, value: 12 },
+  { index: 6, value: 0 },
+  { index: 7, value: 26 },
+  { index: 8, value: 15 },
+  { index: 9, value: 64 },
+  { index: 10, value: 17 },
+  { index: 11, value: 45 },
+  { index: 12, value: 28 },
+  { index: 13, value: 40 },
+  { index: 14, value: 52 },
+  { index: 15, value: 6 },
+  { index: 16, value: 80 },
+  { index: 17, value: 46 },
+  { index: 18, value: 37 },
+  { index: 19, value: 68 },
+  { index: 20, value: 95 },
+  { index: 21, value: 97 },
+  { index: 22, value: 6 },
+  { index: 23, value: 88 },
+  { index: 24, value: 78 },
+  { index: 25, value: 58 },
+  { index: 26, value: 88 },
+  { index: 27, value: 57 },
+  { index: 28, value: 85 },
+  { index: 29, value: 45 },
+];
+
 const PathAnimationExampleScreen = () => {
   const Y_AXIS_WIDTH = 24;
   const CHART_HEIGHT = 300;
-  const DATA_LENGTH = 10;
+  const DATA_LENGTH = 30;
 
   const [data, setData] = useState<ChartData[]>([]);
   const [pathLength, setPathLength] = useState(0);
   const [smoothPathLength, setSmoothPathLength] = useState(0);
+
+  const lineChartRef = useRef<LineChart<number>>(null);
 
   const ANIM_DURATION = 3000;
 
@@ -59,40 +94,10 @@ const PathAnimationExampleScreen = () => {
     for (let i = 0; i < DATA_LENGTH; i++) {
       tmpArray.push({
         index: i,
-        value: Math.round(Math.random() * 100),
+        value: Math.floor(Math.random() * 100),
       });
     }
-    // tmpArray.push({
-    //   index: 0,
-    //   value: 0,
-    // });
-    // tmpArray.push({
-    //   index: 1,
-    //   value: 50,
-    // });
-    // tmpArray.push({
-    //   index: 2,
-    //   value: 10,
-    // });
-    // tmpArray.push({
-    //   index: 3,
-    //   value: 50,
-    // });
-    // tmpArray.push({
-    //   index: 4,
-    //   value: 0,
-    // });
-    // tmpArray.push(
-    //   { index: 0, value: 16 },
-    //   { index: 1, value: 79 },
-    //   { index: 2, value: 14 },
-    //   { index: 3, value: 72 },
-    //   { index: 4, value: 70 },
-    //   { index: 5, value: 85 },
-    //   { index: 6, value: 97 }
-    // );
-    console.log("data", tmpArray);
-    setData([...tmpArray]);
+    setData([...TEST_DATA]);
   }, []);
 
   useEffect(() => {
@@ -127,6 +132,7 @@ const PathAnimationExampleScreen = () => {
     useEffect(() => {
       data!.map((value, index, array) => {
         if (index === array.length - 1) {
+          pathStringArray.push(`L ${x(index)} ${y(value)}`);
           return;
         }
 
@@ -192,75 +198,26 @@ const PathAnimationExampleScreen = () => {
           `M ${x(index + 1)} ${y(array[index + 1])}
         L ${endControlPointX} ${endControlPointY}`
         );
-
-        pathStringArray.push(`L ${x(index)} ${y(value)}`);
-        // // smoothPathStringArray.push(`L ${x(index)} ${y(value)}`);
-        // startTheta =
-        //   Math.atan2(
-        //     y(array[index - 1]) - y(array[index + 1]),
-        //     x(index - 1) - x(index + 1)
-        //   ) + Math.PI;
-        // endTheta = Math.atan2(
-        //   y(array[index]) - y(array[index + 2]),
-        //   x(index) - x(index + 2)
-        // );
-        // startDistance =
-        //   Math.sqrt(
-        //     Math.pow(y(array[index - 1]) - y(array[index + 1]), 2) +
-        //       Math.pow(x(index - 1) - x(index + 1), 2)
-        //   ) * CONTROL_RATIO;
-        // endDistance =
-        //   Math.sqrt(
-        //     Math.pow(y(array[index]) - y(array[index + 2]), 2) +
-        //       Math.pow(x(index) - x(index + 2), 2)
-        //   ) * CONTROL_RATIO;
-        // startControlPointX =
-        //   x(index - 1) + Math.round(Math.cos(startTheta)) * startDistance;
-        // startControlPointY =
-        //   y(array[index - 1]) +
-        //   Math.round(Math.sin(startTheta)) * startDistance;
-        // endControlPointX =
-        //   x(index) + Math.round(Math.cos(endTheta)) * endDistance;
-        // endControlPointY =
-        //   y(value) + Math.round(Math.sin(endTheta)) * endDistance;
-        if (index === 3) {
-          console.log("x(index)", x(index - 1));
-          console.log("y(array[index - 1])", y(array[index - 1]));
-          console.log("x(index)", x(index + 1));
-          console.log("y(array[index - 1])", y(array[index + 1]));
-          console.log("startTheta", startTheta);
-          console.log("startDistance", startDistance);
-          console.log(
-            "Math.cos(startTheta)",
-            Math.round(Math.cos(Number(startTheta)))
-          );
-          console.log(
-            "Math.sin(startTheta)",
-            Math.round(Math.sin(Number(startTheta)))
-          );
-          console.log("startControlPointX", startControlPointX);
-          console.log("startControlPointY", startControlPointY);
-        }
-
-        // // smoothPathStringArray.push(
-        // //   `C ${Math.cos(startTheta)} ${Math.sin(startTheta)} ${Math.cos(
-        // //     endTheta
-        // //   )} ${Math.sin(endTheta)} ${x(index)} ${y(value)}`
-        // // );
-        //
-        // smoothPathStringArray.push(
-        //   `C ${startControlPointX} ${startControlPointY} ${endControlPointX} ${endControlPointY} ${x(
-        //     index
-        //   )} ${y(value)}`
-        // );
-        // controlPointPathStringArray.push(
-        //   `M ${x(index - 1)} ${y(array[index - 1])}
-        //    L ${startControlPointX} ${startControlPointY}`
-        // );
-        // controlPointPathStringArray.push(
-        //   `M ${x(index)} ${y(array[index])}
-        // L ${endControlPointX} ${endControlPointY}`
-        // );
+        console.log("index==============================", index);
+        console.log("startTheta", startTheta);
+        // console.log("startDistance", startDistance);
+        console.log(
+          "Math.cos(startTheta)",
+          Math.round(Math.cos(Number(startTheta)))
+        );
+        console.log(
+          "Math.sin(startTheta)",
+          Math.round(Math.sin(Number(startTheta)))
+        );
+        console.log("endTheta", endTheta);
+        console.log(
+          "Math.cos(endTheta)",
+          Math.round(Math.cos(Number(endTheta)))
+        );
+        console.log(
+          "Math.sin(endTheta)",
+          Math.round(Math.sin(Number(endTheta)))
+        );
       });
       setPathString(pathStringArray.join(" "));
       setSmoothPathString(smoothPathStringArray.join(" "));
@@ -291,9 +248,9 @@ const PathAnimationExampleScreen = () => {
     }, [data]);
 
     useEffect(() => {
-      if (pathLengthRef.current !== -1) {
-        setPathLength(pathLengthRef.current);
-      }
+      // if (pathLengthRef.current !== -1) {
+      setPathLength(pathLengthRef.current);
+      // }
     }, [pathLengthRef]);
 
     useEffect(() => {
@@ -304,13 +261,13 @@ const PathAnimationExampleScreen = () => {
 
     return (
       <Svg fill={"transparent"}>
-        {/*<AnimatedPath*/}
-        {/*  d={pathString}*/}
-        {/*  animatedProps={animatedProps}*/}
-        {/*  stroke={"#f88"}*/}
-        {/*  strokeWidth={2}*/}
-        {/*  strokeDasharray={pathLength}*/}
-        {/*/>*/}
+        <AnimatedPath
+          d={pathString}
+          animatedProps={animatedProps}
+          stroke={"#f88"}
+          strokeWidth={2}
+          strokeDasharray={pathLength}
+        />
         <AnimatedPath
           d={smoothPathString}
           animatedProps={animatedProps}
@@ -318,20 +275,30 @@ const PathAnimationExampleScreen = () => {
           strokeWidth={2}
           strokeDasharray={smoothPathLength}
         />
-        {/*<Path d={controlStartPointPathString} stroke={"#add"} strokeWidth={4} />*/}
-        {/*<Path d={controlEndPointPathString} stroke={"#dad"} strokeWidth={4} />*/}
+        <Path d={controlStartPointPathString} stroke={"#add"} strokeWidth={4} />
+        <Path d={controlEndPointPathString} stroke={"#dad"} strokeWidth={4} />
       </Svg>
     );
   };
 
-  const AxisLine = () => (
-    <G>
-      {/* X Axis */}
-      <Line x1="0%" x2="100%" y1="100%" y2="100%" stroke="#000" />
-      {/* Y Axis */}
-      <Line x1="0%" x2="0%" y1="0%" y2="100%" stroke="#000" />
-    </G>
-  );
+  const CustomDot = ({ x, y, data }: ChildrenProps) => {
+    return (
+      <Svg fill={"transparent"}>
+        {data?.map((value, index) => {
+          return (
+            <Circle
+              key={index}
+              cx={x(index)}
+              cy={y(value)}
+              fill={"#f66"}
+              r={3}
+              stroke={"#f66"}
+            />
+          );
+        })}
+      </Svg>
+    );
+  };
 
   return (
     <SafeAreaView
@@ -359,22 +326,23 @@ const PathAnimationExampleScreen = () => {
             formatLabel={(value) => (value === 0 ? "" : value)}
           />
           <LineChart
+            ref={lineChartRef}
             style={{ flex: 1, height: CHART_HEIGHT }}
             data={[...data.map((value) => value.value)]}
-            contentInset={{ top: 20 }}
+            contentInset={{ top: 20, bottom: 4 }}
             svg={{
+              // stroke: "black",
               stroke: "transparent",
               strokeWidth: 2,
             }}
-            numberOfTicks={4}
           >
-            <AxisLine />
             <Grid />
             <CustomLine
               data={[...data.map((value) => value.value)]}
               setPathLength={setPathLength}
               setSmoothPathLength={setSmoothPathLength}
             />
+            {/*<CustomDot />*/}
           </LineChart>
         </View>
         <XAxis
