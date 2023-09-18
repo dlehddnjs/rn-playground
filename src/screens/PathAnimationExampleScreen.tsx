@@ -69,6 +69,10 @@ const PathAnimationExampleScreen = () => {
   const [pathLength, setPathLength] = useState(0);
   const [smoothPathLength, setSmoothPathLength] = useState(0);
 
+  const [dotVisible, setDotVisible] = useState(false);
+  const [straightLineVisible, setStraightLineVisible] = useState(false);
+  const [controlPointLineVisible, setControlPointLineVisible] = useState(false);
+
   const lineChartRef = useRef<LineChart<number>>(null);
 
   const ANIM_DURATION = 3000;
@@ -87,6 +91,15 @@ const PathAnimationExampleScreen = () => {
     strokeOffsetValue.value = withTiming(1, {
       duration: ANIM_DURATION,
     });
+  };
+  const toggleCustomDot = () => {
+    setDotVisible((prevState) => !prevState);
+  };
+  const toggleStraightLine = () => {
+    setStraightLineVisible((prevState) => !prevState);
+  };
+  const toggleControlPointLine = () => {
+    setControlPointLineVisible((prevState) => !prevState);
   };
 
   useEffect(() => {
@@ -115,7 +128,6 @@ const PathAnimationExampleScreen = () => {
     setPathLength: Dispatch<number>;
     setSmoothPathLength: Dispatch<number>;
   }) => {
-    const CONTROL_RATIO = 0.15;
     const pathLengthRef = useRef(-1);
     const smoothPathLengthRef = useRef(-1);
     const pathStringArray: string[] = [];
@@ -151,16 +163,11 @@ const PathAnimationExampleScreen = () => {
           startControlPointX = x(index);
           startControlPointY = y(array[index]);
         } else {
-          startTheta =
-            Math.atan2(
-              y(array[index - 1]) - y(array[index + 1]),
-              x(index - 1) - x(index + 1)
-            ) + Math.PI;
-          startDistance =
-            Math.sqrt(
-              Math.pow(y(array[index - 1]) - y(array[index + 1]), 2) +
-                Math.pow(x(index - 1) - x(index + 1), 2)
-            ) * CONTROL_RATIO;
+          startTheta = Math.atan2(
+            y(array[index + 1]) - y(array[index - 1]),
+            x(index + 1) - x(index - 1)
+          );
+          startDistance = 10;
           startControlPointX = x(index) + Math.cos(startTheta) * startDistance;
           startControlPointY =
             y(array[index]) + Math.sin(startTheta) * startDistance;
@@ -170,15 +177,12 @@ const PathAnimationExampleScreen = () => {
           endControlPointX = x(index + 1);
           endControlPointY = y(array[index + 1]);
         } else {
-          endTheta = Math.atan2(
-            y(array[index]) - y(array[index + 2]),
-            x(index) - x(index + 2)
-          );
-          endDistance =
-            Math.sqrt(
-              Math.pow(y(array[index]) - y(array[index + 2]), 2) +
-                Math.pow(x(index) - x(index + 2), 2)
-            ) * CONTROL_RATIO;
+          endTheta =
+            Math.atan2(
+              y(array[index + 2]) - y(array[index]),
+              x(index + 2) - x(index)
+            ) + Math.PI;
+          endDistance = 10;
           endControlPointX = x(index + 1) + Math.cos(endTheta) * endDistance;
           endControlPointY =
             y(array[index + 1]) + Math.sin(endTheta) * endDistance;
@@ -198,40 +202,20 @@ const PathAnimationExampleScreen = () => {
           `M ${x(index + 1)} ${y(array[index + 1])}
         L ${endControlPointX} ${endControlPointY}`
         );
-        console.log("index==============================", index);
-        console.log("startTheta", startTheta);
-        // console.log("startDistance", startDistance);
-        console.log(
-          "Math.cos(startTheta)",
-          Math.round(Math.cos(Number(startTheta)))
-        );
-        console.log(
-          "Math.sin(startTheta)",
-          Math.round(Math.sin(Number(startTheta)))
-        );
-        console.log("endTheta", endTheta);
-        console.log(
-          "Math.cos(endTheta)",
-          Math.round(Math.cos(Number(endTheta)))
-        );
-        console.log(
-          "Math.sin(endTheta)",
-          Math.round(Math.sin(Number(endTheta)))
-        );
       });
       setPathString(pathStringArray.join(" "));
       setSmoothPathString(smoothPathStringArray.join(" "));
       setControlStartPointPathString(
         controlPointPathStringArray
           .map((value, index) => {
-            if (index % 2 === 0) return value;
+            if (index % 2 === 0 && index !== 6 && index !== 4) return value;
           })
           .join(" ")
       );
       setControlEndPointPathString(
         controlPointPathStringArray
           .map((value, index) => {
-            if (index % 2 === 1) return value;
+            if (index % 2 === 1 && index !== 1 && index !== 5) return value;
           })
           .join(" ")
       );
@@ -248,9 +232,7 @@ const PathAnimationExampleScreen = () => {
     }, [data]);
 
     useEffect(() => {
-      // if (pathLengthRef.current !== -1) {
       setPathLength(pathLengthRef.current);
-      // }
     }, [pathLengthRef]);
 
     useEffect(() => {
@@ -261,22 +243,36 @@ const PathAnimationExampleScreen = () => {
 
     return (
       <Svg fill={"transparent"}>
-        <AnimatedPath
-          d={pathString}
-          animatedProps={animatedProps}
-          stroke={"#f88"}
-          strokeWidth={2}
-          strokeDasharray={pathLength}
-        />
+        {straightLineVisible ? (
+          <AnimatedPath
+            d={pathString}
+            animatedProps={animatedProps}
+            stroke={"#f66"}
+            strokeWidth={2}
+            strokeDasharray={pathLength}
+          />
+        ) : null}
         <AnimatedPath
           d={smoothPathString}
           animatedProps={animatedProps}
-          stroke={"#88f"}
+          stroke={"#000"}
           strokeWidth={2}
           strokeDasharray={smoothPathLength}
         />
-        <Path d={controlStartPointPathString} stroke={"#add"} strokeWidth={4} />
-        <Path d={controlEndPointPathString} stroke={"#dad"} strokeWidth={4} />
+        {controlPointLineVisible ? (
+          <>
+            <Path
+              d={controlStartPointPathString}
+              stroke={"#add"}
+              strokeWidth={4}
+            />
+            <Path
+              d={controlEndPointPathString}
+              stroke={"#dad"}
+              strokeWidth={4}
+            />
+          </>
+        ) : null}
       </Svg>
     );
   };
@@ -287,12 +283,13 @@ const PathAnimationExampleScreen = () => {
         {data?.map((value, index) => {
           return (
             <Circle
-              key={index}
+              key={`circle_${index}`}
               cx={x(index)}
               cy={y(value)}
-              fill={"#f66"}
+              fill={"#f11"}
               r={3}
-              stroke={"#f66"}
+              stroke={"#f11"}
+              opacity={0.5}
             />
           );
         })}
@@ -331,7 +328,6 @@ const PathAnimationExampleScreen = () => {
             data={[...data.map((value) => value.value)]}
             contentInset={{ top: 20, bottom: 4 }}
             svg={{
-              // stroke: "black",
               stroke: "transparent",
               strokeWidth: 2,
             }}
@@ -342,7 +338,7 @@ const PathAnimationExampleScreen = () => {
               setPathLength={setPathLength}
               setSmoothPathLength={setSmoothPathLength}
             />
-            {/*<CustomDot />*/}
+            {dotVisible ? <CustomDot /> : null}
           </LineChart>
         </View>
         <XAxis
@@ -355,6 +351,36 @@ const PathAnimationExampleScreen = () => {
             fill: "#1d1d1f",
           }}
           numberOfTicks={6}
+        />
+      </View>
+      <View
+        style={{
+          flexDirection: "row",
+          gap: spacing.m,
+          marginHorizontal: spacing.m,
+          marginBottom: spacing.m,
+        }}
+      >
+        <PressableWithFeedback
+          key={"Data point"}
+          title={"Data point"}
+          onPress={toggleCustomDot}
+          alignTitleCenter={true}
+          pressableStyle={{ flex: 1 }}
+        />
+        <PressableWithFeedback
+          key={"Straight Line"}
+          title={"Straight Line"}
+          onPress={toggleStraightLine}
+          alignTitleCenter={true}
+          pressableStyle={{ flex: 1 }}
+        />
+        <PressableWithFeedback
+          key={"Control Point"}
+          title={"Control Point"}
+          onPress={toggleControlPointLine}
+          alignTitleCenter={true}
+          pressableStyle={{ flex: 1 }}
         />
       </View>
       <PressableWithFeedback
