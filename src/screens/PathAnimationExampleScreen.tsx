@@ -63,9 +63,8 @@ const TEST_DATA = [
 const PathAnimationExampleScreen = () => {
   const Y_AXIS_WIDTH = 24;
   const CHART_HEIGHT = 300;
-  const DATA_LENGTH = 30;
+  const CONTROL_POINT_DISTANCE = 7.5;
 
-  const [data, setData] = useState<ChartData[]>([]);
   const [pathLength, setPathLength] = useState(0);
   const [smoothPathLength, setSmoothPathLength] = useState(0);
 
@@ -101,17 +100,6 @@ const PathAnimationExampleScreen = () => {
   const toggleControlPointLine = () => {
     setControlPointLineVisible((prevState) => !prevState);
   };
-
-  useEffect(() => {
-    const tmpArray: ChartData[] = [];
-    for (let i = 0; i < DATA_LENGTH; i++) {
-      tmpArray.push({
-        index: i,
-        value: Math.floor(Math.random() * 100),
-      });
-    }
-    setData([...TEST_DATA]);
-  }, []);
 
   useEffect(() => {
     if (pathLength > 0) {
@@ -167,10 +155,10 @@ const PathAnimationExampleScreen = () => {
             y(array[index + 1]) - y(array[index - 1]),
             x(index + 1) - x(index - 1)
           );
-          startDistance = 10;
-          startControlPointX = x(index) + Math.cos(startTheta) * startDistance;
+          startControlPointX =
+            x(index) + Math.cos(startTheta) * CONTROL_POINT_DISTANCE;
           startControlPointY =
-            y(array[index]) + Math.sin(startTheta) * startDistance;
+            y(array[index]) + Math.sin(startTheta) * CONTROL_POINT_DISTANCE;
         }
 
         if (index === array.length - 2) {
@@ -182,10 +170,10 @@ const PathAnimationExampleScreen = () => {
               y(array[index + 2]) - y(array[index]),
               x(index + 2) - x(index)
             ) + Math.PI;
-          endDistance = 10;
-          endControlPointX = x(index + 1) + Math.cos(endTheta) * endDistance;
+          endControlPointX =
+            x(index + 1) + Math.cos(endTheta) * CONTROL_POINT_DISTANCE;
           endControlPointY =
-            y(array[index + 1]) + Math.sin(endTheta) * endDistance;
+            y(array[index + 1]) + Math.sin(endTheta) * CONTROL_POINT_DISTANCE;
         }
 
         pathStringArray.push(`L ${x(index)} ${y(value)}`);
@@ -318,14 +306,14 @@ const PathAnimationExampleScreen = () => {
             svg={{
               fill: "#1d1d1f",
             }}
-            data={[...data.map((value) => value.value)]}
+            data={[...TEST_DATA.map((value) => value.value)]}
             numberOfTicks={4}
             formatLabel={(value) => (value === 0 ? "" : value)}
           />
           <LineChart
             ref={lineChartRef}
             style={{ flex: 1, height: CHART_HEIGHT }}
-            data={[...data.map((value) => value.value)]}
+            data={[...TEST_DATA.map((value) => value.value)]}
             contentInset={{ top: 20, bottom: 4 }}
             svg={{
               stroke: "transparent",
@@ -334,7 +322,7 @@ const PathAnimationExampleScreen = () => {
           >
             <Grid />
             <CustomLine
-              data={[...data.map((value) => value.value)]}
+              data={[...TEST_DATA.map((value) => value.value)]}
               setPathLength={setPathLength}
               setSmoothPathLength={setSmoothPathLength}
             />
@@ -343,7 +331,7 @@ const PathAnimationExampleScreen = () => {
         </View>
         <XAxis
           style={{ paddingTop: spacing.s }}
-          data={[...data.map((value) => value.index)]}
+          data={[...TEST_DATA.map((value) => value.index)]}
           contentInset={{
             left: Y_AXIS_WIDTH,
           }}
