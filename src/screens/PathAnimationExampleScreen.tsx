@@ -1,7 +1,7 @@
 import React, { Dispatch, useEffect, useRef, useState } from "react";
 import { SafeAreaView, View } from "react-native";
 import { spacing } from "../styles/Spacing";
-import Svg, { Circle, G, Line, Path } from "react-native-svg";
+import Svg, { Circle, Path } from "react-native-svg";
 import Animated, {
   useAnimatedProps,
   useSharedValue,
@@ -138,8 +138,6 @@ const PathAnimationExampleScreen = () => {
 
         let startTheta,
           endTheta,
-          startDistance,
-          endDistance,
           startControlPointX,
           startControlPointY,
           endControlPointX,
